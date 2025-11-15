@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         Advanced WebRTC IP Geolocation & Leak Detector (ome.tv)
+// @name         IP Geolocation by tyroxcc (ome.tv)
 // @namespace    http://tampermonkey.net/
-// @version      1.0.5
+// @version      1.0.6
 // @description  Detects WebRTC IP leaks, performs geolocation, and displays results in a draggable, persistent, and feature-rich panel on ome.tv.
 // @author       tyroxcc
 // @match        *://*.ome.tv/*
@@ -16,11 +16,11 @@
 
     // --- Configuration ---
     const CONFIG = {
-        PANEL_ID: 'manus-geo-panel',
-        API_KEY: '072a896dc04088', // ipinfo.io API key from original script
+        PANEL_ID: 'tyroxcc-geo-panel',
+        API_KEY: 'c68b7323b99d92', // ipinfo.io API key from original script
         API_URL: 'https://ipinfo.io/',
-        STORAGE_KEY_STATE: 'manusGeoPanelState',
-        STORAGE_KEY_IP: 'manusGeoLastIP',
+        STORAGE_KEY_STATE: 'tyroxccGeoPanelState',
+        STORAGE_KEY_IP: 'tyroxccGeoLastIP',
         REFRESH_INTERVAL_MS: 5000, // Check for new IP every 5 seconds
         MAX_IP_HISTORY: 5,
     };
@@ -43,7 +43,7 @@
             // Fallback for environments where GM_getValue is not available
             return defaultValue;
         } catch (e) {
-            console.error(`[GeoDetector] Error reading storage key ${key}:`, e);
+            console.error(`[TyroxGeo] Error reading storage key ${key}:`, e);
             return defaultValue;
         }
     }
@@ -60,7 +60,7 @@
                 GM_setValue(key, value);
             }
         } catch (e) {
-            console.error(`[GeoDetector] Error writing storage key ${key}:`, e);
+            console.error(`[TyroxGeo] Error writing storage key ${key}:`, e);
         }
     }
 
@@ -84,7 +84,7 @@
         constructor() {
             this.apiKey = CONFIG.API_KEY;
             this.regionNames = new Intl.DisplayNames(['en'], { type: 'region' });
-            this.ipHistory = getStoredValue('manusGeoIPHistory', []);
+            this.ipHistory = getStoredValue('tyroxccGeoIPHistory', []);
             this.lastReportedIP = getStoredValue(CONFIG.STORAGE_KEY_IP, null);
         }
 
@@ -98,7 +98,7 @@
 
             // CRITICAL FIX: Check for GM_xmlhttpRequest availability
             if (typeof GM_xmlhttpRequest !== 'function') {
-                console.error('[GeoDetector] GM_xmlhttpRequest is not defined. Check @grant directives.');
+                console.error('[TyroxGeo] GM_xmlhttpRequest is not defined. Check @grant directives.');
                 return null;
             }
 
@@ -110,7 +110,7 @@
                         try {
                             const json = JSON.parse(response.responseText);
                             if (json.error) {
-                                console.error(`[GeoDetector] API Error for ${ip}:`, json.error.message);
+                                console.error(`[TyroxGeo] API Error for ${ip}:`, json.error.message);
                                 resolve(null);
                                 return;
                             }
@@ -129,12 +129,12 @@
                             this.updateHistory(ip, data);
                             resolve(data);
                         } catch (e) {
-                            console.error(`[GeoDetector] Geolocation request failed for ${ip}:`, e);
+                            console.error(`[TyroxGeo] Geolocation request failed for ${ip}:`, e);
                             resolve(null);
                         }
                     },
                     onerror: (response) => {
-                        console.error(`[GeoDetector] GM_xmlhttpRequest failed for ${ip}:`, response);
+                        console.error(`[TyroxGeo] GM_xmlhttpRequest failed for ${ip}:`, response);
                         resolve(null);
                     }
                 });
@@ -165,7 +165,7 @@
                 this.ipHistory.pop();
             }
 
-            setStoredValue('manusGeoIPHistory', this.ipHistory);
+            setStoredValue('tyroxccGeoIPHistory', this.ipHistory);
             this.lastReportedIP = ip;
             setStoredValue(CONFIG.STORAGE_KEY_IP, ip);
         }
@@ -327,7 +327,7 @@
             this.panel.id = CONFIG.PANEL_ID;
             this.panel.innerHTML = `
                 <div class="header">
-                    <span>Advanced IP Geolocation</span>
+                    <span>IP Geolocation by tyroxcc</span>
                     <div>
                         <button class="history-btn" title="View History">H</button>
                         <button class="toggle-btn" title="Toggle Panel">_</button>
@@ -500,7 +500,7 @@
 
         init() {
             if (!this.OriginalPC) {
-                console.warn('[GeoDetector] RTCPeerConnection not found. WebRTC detection disabled.');
+                console.warn('[TyroxGeo] RTCPeerConnection not found. WebRTC detection disabled.');
                 return;
             }
             this.patchAddIceCandidate();
@@ -527,7 +527,7 @@
                             
                             // FIX: Check if the IP is new to the session AND different from the last reported one
                             if (ip !== self.geoService.getLastReportedIP() && !self.detectedIps.has(ip)) {
-                                console.log(`[GeoDetector] New Public IP Detected (srflx): ${ip}`);
+                                console.log(`[TyroxGeo] New Public IP Detected (srflx): ${ip}`);
                                 
                                 // Add to session set to prevent immediate duplicates
                                 self.detectedIps.add(ip);
@@ -541,7 +541,7 @@
                         }
                     } catch (e) {
                         // Suppress errors to avoid breaking the application
-                        console.error('[GeoDetector] Error in addIceCandidate hook:', e);
+                        console.error('[TyroxGeo] Error in addIceCandidate hook:', e);
                     }
                     // Call the original function
                     return origAdd.call(this, ice, ...rest);
@@ -584,16 +584,16 @@
         blockReload() {
             try {
                 // Block reload and assign
-                window.location.reload = () => console.log('[GeoDetector] window.location.reload blocked');
-                window.location.assign = () => console.log('[GeoDetector] window.location.assign blocked');
+                window.location.reload = () => console.log('[TyroxGeo] window.location.reload blocked');
+                window.location.assign = () => console.log('[TyroxGeo] window.location.assign blocked');
 
                 // Block href setter
                 Object.defineProperty(window.location, 'href', {
-                    set: v => console.log('[GeoDetector] window.location.href change blocked to', v),
+                    set: v => console.log('[TyroxGeo] window.location.href change blocked to', v),
                     configurable: true
                 });
             } catch (e) {
-                console.warn('[GeoDetector] Could not override window.location properties:', e);
+                console.warn('[TyroxGeo] Could not override window.location properties:', e);
             }
         }
 
@@ -606,7 +606,7 @@
                     document.querySelectorAll(tag).forEach(el => {
                         if (el.innerText && el.innerText.trim().toLowerCase() === 'neustart') {
                             el.style.display = 'none';
-                            console.log('[GeoDetector] Hid "Neustart" element:', el);
+                            console.log('[TyroxGeo] Hid "Neustart" element:', el);
                         }
                     });
                 });
@@ -633,7 +633,7 @@
         detector.init();
         blocker.init();
 
-        console.log('[GeoDetector] Advanced WebRTC IP Geolocation & Leak Detector initialized.');
+        console.log('[TyroxGeo] Advanced WebRTC IP Geolocation & Leak Detector initialized.');
     }
 
     main();

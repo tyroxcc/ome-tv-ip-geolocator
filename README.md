@@ -1,4 +1,4 @@
-# Advanced WebRTC IP Geolocation & Leak Detector for Ome.tv
+# IP Geolocation by tyroxcc (Advanced WebRTC Leak Detector for Ome.tv)
 
 ## 🌟 Overview
 
@@ -40,9 +40,9 @@ The main script file is located in the repository root:
 
 | Field | Value |
 | :--- | :--- |
-| **Name** | Advanced WebRTC IP Geolocation & Leak Detector (ome.tv) |
+| **Name** | IP Geolocation by tyroxcc (ome.tv) |
 | **Author** | tyroxcc |
-| **Version** | 1.0.5 |
+| **Version** | 1.0.6 |
 | **Match** | `*://*.ome.tv/*` |
 
 ## 📝 License
